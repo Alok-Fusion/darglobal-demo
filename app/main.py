@@ -207,6 +207,11 @@ with st.sidebar:
         if st.button(label, key=f"btn_{label}", use_container_width=True):
             st.session_state.selected_prompt = query_text
 
+    st.markdown("---")
+    if st.button("New Inquiry / Reset", key="btn_sidebar_reset", use_container_width=True):
+        st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
+        st.rerun()
+
 
 # Initialize OpenRouter Client (Model fixed to Nemotron, API key loaded silently from environment)
 client = OpenRouterClient(
@@ -252,11 +257,11 @@ tab_chat, tab_portfolio, tab_architecture = st.tabs([
 # ========================================================
 with tab_chat:
     # Chat Action Bar (Clear Chat, Export to PDF)
-    col_status, col_clear, col_pdf = st.columns([3, 1, 1.2])
+    col_status, col_clear, col_pdf = st.columns([3, 1.2, 1.2])
     with col_status:
-        st.caption("Active Session &bull; Output rendered directly above input &bull; PDF export ready")
+        st.caption("Active Session &bull; Single Inquiry Focus &bull; PDF export ready")
     with col_clear:
-        if st.button("Clear Chat", key="btn_clear_chat", use_container_width=True):
+        if st.button("New Inquiry", key="btn_clear_chat", use_container_width=True):
             st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
             st.rerun()
     with col_pdf:
@@ -302,12 +307,6 @@ with tab_chat:
     if user_input:
         current_time = datetime.now().strftime("%d %b %Y, %I:%M %p")
         
-        # Add User Message to History
-        st.session_state.messages.append({
-            "role": "user",
-            "content": user_input,
-            "timestamp": current_time
-        })
         with st.chat_message("user"):
             st.markdown(user_input)
             st.caption(f"{current_time}")
@@ -326,14 +325,8 @@ with tab_chat:
         # Call OpenRouter with NVIDIA Nemotron
         with st.chat_message("assistant"):
             with st.spinner("Synthesizing portfolio intelligence with NVIDIA Nemotron 3.5 Super VL..."):
-                history = [
-                    {"role": m["role"], "content": m["content"]}
-                    for m in st.session_state.messages
-                    if m["role"] in ["user", "assistant"]
-                ]
-                
                 response_data = client.generate_response(
-                    messages=history,
+                    messages=[{"role": "user", "content": user_input}],
                     rag_context=rag_context
                 )
                 
@@ -348,15 +341,22 @@ with tab_chat:
                     for card in retrieved_cards:
                         render_property_card(card)
 
-        # Append to message history
-        st.session_state.messages.append({
-            "role": "assistant",
-            "content": assistant_reply,
-            "cards": retrieved_cards,
-            "timestamp": asst_time
-        })
+        # STRICTLY ONE CHAT AT A TIME: Replace state with only the current inquiry and response
+        st.session_state.messages = [
+            {
+                "role": "user",
+                "content": user_input,
+                "timestamp": current_time
+            },
+            {
+                "role": "assistant",
+                "content": assistant_reply,
+                "cards": retrieved_cards,
+                "timestamp": asst_time
+            }
+        ]
         
-        # Trigger clean rerun to update PDF download buffer and scroll position immediately
+        # Trigger clean rerun to update PDF buffer and keep exactly one chat on screen
         st.rerun()
 
 
