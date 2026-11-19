@@ -50,7 +50,8 @@ INITIAL_WELCOME_MESSAGE = {
         "property marketplace across Riyadh, Jeddah, and Al Khobar.\n\n"
         "How may I assist your real estate acquisition or investment research today?"
     ),
-    "cards": []
+    "cards": [],
+    "timestamp": datetime.now().strftime("%d %b %Y, %I:%M %p")
 }
 
 if "rag_engine" not in st.session_state:
@@ -284,6 +285,10 @@ with tab_chat:
                     st.markdown("#### Verified Portfolio Recommendations:")
                     for card in cards:
                         render_property_card(card)
+                
+                msg_time = message.get("timestamp", "")
+                if msg_time:
+                    st.caption(f"{msg_time}")
 
     # Check for prompt shortcut click from sidebar
     active_prompt = None
@@ -295,10 +300,17 @@ with tab_chat:
     user_input = st.chat_input("Ask about DarGlobal developments or Wasalt Saudi properties...") or active_prompt
 
     if user_input:
+        current_time = datetime.now().strftime("%d %b %Y, %I:%M %p")
+        
         # Add User Message to History
-        st.session_state.messages.append({"role": "user", "content": user_input})
+        st.session_state.messages.append({
+            "role": "user",
+            "content": user_input,
+            "timestamp": current_time
+        })
         with st.chat_message("user"):
             st.markdown(user_input)
+            st.caption(f"{current_time}")
 
         # Retrieve matching properties dynamically via BM25 with active filters
         rag = st.session_state.rag_engine
@@ -326,9 +338,10 @@ with tab_chat:
                 )
                 
                 assistant_reply = response_data["content"]
+                asst_time = datetime.now().strftime("%d %b %Y, %I:%M %p")
                 
                 st.markdown(assistant_reply)
-                st.caption("Model: `NVIDIA Nemotron 3.5 Super VL (Free Tier)`")
+                st.caption(f"Model: `NVIDIA Nemotron 3.5 Super VL (Free Tier)` &bull; {asst_time}")
                 
                 if retrieved_cards:
                     st.markdown("#### Verified Portfolio Recommendations:")
@@ -339,7 +352,8 @@ with tab_chat:
         st.session_state.messages.append({
             "role": "assistant",
             "content": assistant_reply,
-            "cards": retrieved_cards
+            "cards": retrieved_cards,
+            "timestamp": asst_time
         })
         
         # Trigger clean rerun to update PDF download buffer and scroll position immediately
