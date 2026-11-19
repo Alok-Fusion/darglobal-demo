@@ -1,7 +1,7 @@
 """
 DarGlobal & Wasalt Real Estate Advisory AI
 Enterprise Applied AI Application with Dynamic Data Sync, PDF Export,
-Single-Inquiry Focus, and Concurrency Input Locking.
+Single-Inquiry Focus, Compact UI, and Concurrency Input Locking.
 Author: Alok Kushwaha
 """
 
@@ -78,7 +78,7 @@ if "messages" not in st.session_state:
 # Global processing lock flag
 is_busy = st.session_state.is_processing
 
-# Helper function to render a luxury property card
+# Helper function to render a compact luxury property card
 def render_property_card(card: dict):
     source = card.get("source", "Portfolio")
     is_dg = (source == "DarGlobal")
@@ -92,34 +92,36 @@ def render_property_card(card: dict):
     partner = card.get("brand_partner", "N/A")
     partner_row = f'<div class="info-item"><strong>Partner:</strong> {partner}</div>' if partner != "N/A" else ""
     
-    amenities = card.get("amenities", [])[:4]
+    amenities = card.get("amenities", [])[:3]
     chips_html = "".join([f'<span class="amenity-chip">{a}</span>' for a in amenities])
     
     desc_preview = card.get("description", "")
-    if len(desc_preview) > 170:
-        desc_preview = desc_preview[:170] + "..."
+    if len(desc_preview) > 105:
+        desc_preview = desc_preview[:105] + "..."
 
-    cta_text = "View Development Details" if is_dg else "View Verified Listing"
+    cta_text = "Details &rarr;" if is_dg else "Listing &rarr;"
 
     card_html = f"""
     <div class="property-card-lux">
-        <div class="card-top-row">
-            <h3 class="card-title">{card.get('title')}</h3>
-            <span class="{badge_class}">{badge_label}</span>
+        <div>
+            <div class="card-top-row">
+                <h4 class="card-title">{card.get('title')}</h4>
+                <span class="{badge_class}">{badge_label}</span>
+            </div>
+            <div class="card-price-badge">
+                {price_local} {usd_str}
+            </div>
+            <div class="card-info-grid">
+                <div class="info-item">📍 {card.get('city')}, {card.get('country')}</div>
+                <div class="info-item">🏡 {card.get('property_type')} &bull; {card.get('bedrooms')}</div>
+                {partner_row}
+            </div>
+            <div class="card-desc">{desc_preview}</div>
+            <div class="card-chips-row">{chips_html}</div>
         </div>
-        <div class="card-price-badge">
-            {price_local} {usd_str}
+        <div>
+            <a href="{card.get('source_url', '#')}" target="_blank" class="btn-card-cta">{cta_text}</a>
         </div>
-        <div class="card-info-grid">
-            <div class="info-item"><strong>Location:</strong> {card.get('city')}, {card.get('country')}</div>
-            <div class="info-item"><strong>Type:</strong> {card.get('property_type')}</div>
-            <div class="info-item"><strong>Layout:</strong> {card.get('bedrooms')}</div>
-            <div class="info-item"><strong>Status:</strong> {card.get('status')}</div>
-            {partner_row}
-        </div>
-        <div class="card-desc">{desc_preview}</div>
-        <div class="card-chips-row">{chips_html}</div>
-        <a href="{card.get('source_url', '#')}" target="_blank" class="btn-card-cta">{cta_text} &rarr;</a>
     </div>
     """
     st.markdown(card_html, unsafe_allow_html=True)
@@ -239,7 +241,7 @@ client = OpenRouterClient(
 
 
 # ========================================================
-# TOP BRAND HERO SECTION
+# TOP BRAND HERO SECTION (COMPACT)
 # ========================================================
 st.markdown(f"""
 <div class="hero-container">
@@ -274,34 +276,7 @@ tab_chat, tab_portfolio, tab_architecture = st.tabs([
 # TAB 1: ADVISORY CHAT
 # ========================================================
 with tab_chat:
-    # Chat Action Bar (Disabled when busy)
-    col_status, col_clear, col_pdf = st.columns([3, 1.2, 1.2])
-    with col_status:
-        if is_busy:
-            st.caption("Status: **Generating response...** &bull; Other inputs locked")
-        else:
-            st.caption("Active Session &bull; Single Inquiry Focus &bull; PDF export ready")
-            
-    with col_clear:
-        if st.button("New Inquiry", key="btn_clear_chat", use_container_width=True, disabled=is_busy):
-            st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
-            st.session_state.pending_query = None
-            st.session_state.is_processing = False
-            st.rerun()
-            
-    with col_pdf:
-        pdf_bytes = generate_advisory_pdf(st.session_state.messages)
-        st.download_button(
-            label="Export to PDF",
-            data=pdf_bytes,
-            file_name=f"DarGlobal_Advisory_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-            mime="application/pdf",
-            key="btn_download_pdf",
-            use_container_width=True,
-            disabled=is_busy
-        )
-
-    st.markdown("<hr style='margin: 0.5rem 0 1.2rem 0; border-color: rgba(255,255,255,0.06);'>", unsafe_allow_html=True)
+    st.caption("Active Session &bull; Single Inquiry Focus &bull; Minimal Scrolling Layout")
 
     # Chat Scroll Area (Padding at bottom ensures responses stay above the typing bar)
     chat_container = st.container()
@@ -315,13 +290,37 @@ with tab_chat:
                     
                     cards = message.get("cards", [])
                     if cards:
-                        st.markdown("#### Verified Portfolio Recommendations:")
-                        for card in cards:
-                            render_property_card(card)
+                        st.markdown("<p style='font-size: 0.85rem; font-weight: 700; color: #fae8b4; margin: 0.4rem 0 0.2rem 0;'>Verified Portfolio Recommendations:</p>", unsafe_allow_html=True)
+                        num_cols = min(len(cards), 3)
+                        card_cols = st.columns(num_cols)
+                        for idx_c, card in enumerate(cards[:num_cols]):
+                            with card_cols[idx_c]:
+                                render_property_card(card)
                     
                     msg_time = message.get("timestamp", "")
                     if msg_time:
                         st.caption(f"{msg_time}")
+
+            # Actions Bar Placed DIRECTLY AFTER THE RESULTS
+            st.markdown("<div style='margin-top: 0.8rem;'></div>", unsafe_allow_html=True)
+            col_spacer, col_clear, col_pdf = st.columns([2.5, 1.2, 1.3])
+            with col_clear:
+                if st.button("New Inquiry / Clear", key="btn_post_clear", use_container_width=True, disabled=is_busy):
+                    st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
+                    st.session_state.pending_query = None
+                    st.session_state.is_processing = False
+                    st.rerun()
+            with col_pdf:
+                pdf_bytes = generate_advisory_pdf(st.session_state.messages)
+                st.download_button(
+                    label="Export to PDF",
+                    data=pdf_bytes,
+                    file_name=f"DarGlobal_Advisory_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf",
+                    key="btn_post_pdf",
+                    use_container_width=True,
+                    disabled=is_busy
+                )
 
     # Active Query Execution Block (Locked & In-Progress)
     if is_busy and st.session_state.pending_query:
@@ -361,9 +360,12 @@ with tab_chat:
                     st.caption(f"Model: `NVIDIA Nemotron 3.5 Super VL (Free Tier)` &bull; {asst_timestamp}")
                     
                     if retrieved_cards:
-                        st.markdown("#### Verified Portfolio Recommendations:")
-                        for card in retrieved_cards:
-                            render_property_card(card)
+                        st.markdown("<p style='font-size: 0.85rem; font-weight: 700; color: #fae8b4; margin: 0.4rem 0 0.2rem 0;'>Verified Portfolio Recommendations:</p>", unsafe_allow_html=True)
+                        num_cols = min(len(cards), 3) if 'cards' in locals() else min(len(retrieved_cards), 3)
+                        card_cols = st.columns(num_cols)
+                        for idx_c, card in enumerate(retrieved_cards[:num_cols]):
+                            with card_cols[idx_c]:
+                                render_property_card(card)
 
                     # Update session state with strictly this one chat
                     st.session_state.messages = [
@@ -403,7 +405,7 @@ with tab_chat:
 
 
 # ========================================================
-# TAB 2: PORTFOLIO CATALOG
+# TAB 2: PORTFOLIO CATALOG (3-COLUMN COMPACT GRID)
 # ========================================================
 with tab_portfolio:
     st.markdown("### Verified Real Estate Asset Catalog")
@@ -441,9 +443,9 @@ with tab_portfolio:
 
     st.markdown(f"**Showing {len(filtered_docs)} verified developments (Live synced: {st.session_state.last_synced_time}):**")
     
-    col_a, col_b = st.columns(2)
+    col_a, col_b, col_c = st.columns(3)
     for idx, doc in enumerate(filtered_docs):
-        target_col = col_a if idx % 2 == 0 else col_b
+        target_col = [col_a, col_b, col_c][idx % 3]
         with target_col:
             render_property_card(doc)
 

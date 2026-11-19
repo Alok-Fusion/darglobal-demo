@@ -23,15 +23,15 @@ html, body, [class*="css"] {
 }
 
 /* ========================================================
-   TOP BRAND BANNER (HERO)
+   TOP BRAND BANNER (HERO) - COMPACT
    ======================================================== */
 .hero-container {
     background: linear-gradient(135deg, #0e1526 0%, #090e1a 100%);
     border: 1px solid rgba(212, 175, 55, 0.3);
-    border-radius: 16px;
-    padding: 1.8rem 2rem 1.6rem 2rem;
-    margin-bottom: 1.8rem;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    border-radius: 12px;
+    padding: 1rem 1.4rem 0.9rem 1.4rem;
+    margin-bottom: 0.9rem;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
     position: relative;
     overflow: hidden;
 }
@@ -42,7 +42,7 @@ html, body, [class*="css"] {
     top: 0;
     left: 0;
     right: 0;
-    height: 3px;
+    height: 2.5px;
     background: linear-gradient(90deg, #c5a059, #f7e7b4, #c5a059);
 }
 
@@ -51,13 +51,13 @@ html, body, [class*="css"] {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 0.8rem;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
 }
 
 .brand-badge-group {
     display: flex;
-    gap: 0.6rem;
+    gap: 0.5rem;
     align-items: center;
 }
 
@@ -65,61 +65,61 @@ html, body, [class*="css"] {
     background: rgba(212, 175, 55, 0.15);
     color: #fae8b4;
     border: 1px solid rgba(212, 175, 55, 0.4);
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.78rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 14px;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
 }
 
 .badge-wasalt {
     background: rgba(56, 189, 248, 0.15);
     color: #7dd3fc;
     border: 1px solid rgba(56, 189, 248, 0.4);
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.78rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 14px;
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
 }
 
 .badge-engine-status {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.4rem;
     background: rgba(16, 185, 129, 0.12);
     border: 1px solid rgba(16, 185, 129, 0.3);
     color: #6ee7b7;
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.78rem;
+    padding: 0.2rem 0.65rem;
+    border-radius: 14px;
+    font-size: 0.72rem;
     font-weight: 600;
 }
 
 .pulse-circle {
-    width: 8px;
-    height: 8px;
+    width: 7px;
+    height: 7px;
     background-color: #10b981;
     border-radius: 50%;
-    box-shadow: 0 0 8px #10b981;
+    box-shadow: 0 0 6px #10b981;
 }
 
 .hero-headline {
     font-family: 'Cinzel', serif !important;
-    font-size: 2.1rem;
+    font-size: 1.55rem;
     font-weight: 700;
     color: #ffffff;
-    letter-spacing: 1px;
-    margin: 0.3rem 0 0.5rem 0;
+    letter-spacing: 0.8px;
+    margin: 0.15rem 0 0.3rem 0;
     background: linear-gradient(135deg, #ffffff 0%, #fae8b4 50%, #d4af37 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
 .hero-subtext {
-    font-size: 0.95rem;
+    font-size: 0.84rem;
     color: #94a3b8;
-    line-height: 1.6;
+    line-height: 1.45;
     margin: 0;
     max-width: 900px;
 }
@@ -265,39 +265,41 @@ div[data-testid="stSidebar"] label {
 }
 
 /* ========================================================
-   CHAT CONTAINER & MESSAGES (HIGH CONTRAST)
+   CHAT CONTAINER & MESSAGES (COMPACT & HIGH CONTRAST)
    ======================================================== */
 .stChatMessage {
     background-color: #0c1220 !important;
     border: 1px solid rgba(255, 255, 255, 0.08) !important;
-    border-radius: 14px !important;
-    padding: 1.2rem 1.4rem !important;
-    margin-bottom: 1rem !important;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+    border-radius: 10px !important;
+    padding: 0.75rem 1rem !important;
+    margin-bottom: 0.5rem !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25) !important;
 }
 
 /* User Bubble */
 div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarUser"]) {
     background-color: #111a30 !important;
-    border-left: 4px solid #6366f1 !important;
+    border-left: 3.5px solid #6366f1 !important;
 }
 
 /* Assistant Bubble */
 div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssistant"]) {
     background-color: #0b111e !important;
-    border-left: 4px solid #d4af37 !important;
+    border-left: 3.5px solid #d4af37 !important;
 }
 
 .stChatMessage p, .stChatMessage li, .stChatMessage span {
     color: #e2e8f0 !important;
-    line-height: 1.65 !important;
-    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+    font-size: 0.9rem !important;
+    margin-bottom: 0.35rem !important;
 }
 
 .stChatMessage h1, .stChatMessage h2, .stChatMessage h3, .stChatMessage h4 {
     color: #fae8b4 !important;
     font-weight: 700 !important;
-    margin: 0.8rem 0 0.4rem 0 !important;
+    margin: 0.5rem 0 0.3rem 0 !important;
+    font-size: 1.05rem !important;
 }
 
 .stChatMessage strong {
@@ -306,62 +308,66 @@ div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssista
 }
 
 /* ========================================================
-   LUXURY PROPERTY CARDS (HIGH CONTRAST & READABLE)
+   COMPACT LUXURY PROPERTY CARDS
    ======================================================== */
 .property-card-lux {
     background: #0f1628;
     border: 1px solid rgba(212, 175, 55, 0.3);
-    border-radius: 14px;
-    padding: 1.3rem;
-    margin: 1rem 0;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    padding: 0.75rem 0.85rem;
+    margin: 0.3rem 0;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
     position: relative;
-    transition: all 0.25s ease;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
 }
 
 .property-card-lux:hover {
     border-color: #f7e7b4;
     transform: translateY(-2px);
-    box-shadow: 0 12px 30px rgba(212, 175, 55, 0.15);
+    box-shadow: 0 8px 20px rgba(212, 175, 55, 0.15);
 }
 
 .card-top-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 0.6rem;
-    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.4rem;
+    margin-bottom: 0.35rem;
 }
 
 .card-title {
-    font-size: 1.18rem;
+    font-size: 0.92rem;
     font-weight: 700;
     color: #ffffff;
     margin: 0;
-    line-height: 1.3;
+    line-height: 1.25;
 }
 
 .card-badge-darglobal {
     background: rgba(212, 175, 55, 0.18);
     color: #fae8b4;
     border: 1px solid rgba(212, 175, 55, 0.45);
-    font-size: 0.72rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    padding: 0.25rem 0.65rem;
-    border-radius: 6px;
-    letter-spacing: 0.6px;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .card-badge-wasalt {
     background: rgba(56, 189, 248, 0.18);
     color: #7dd3fc;
     border: 1px solid rgba(56, 189, 248, 0.45);
-    font-size: 0.72rem;
+    font-size: 0.65rem;
     font-weight: 700;
-    padding: 0.25rem 0.65rem;
-    border-radius: 6px;
-    letter-spacing: 0.6px;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
 }
 
 .card-price-badge {
@@ -370,37 +376,35 @@ div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssista
     background: rgba(16, 185, 129, 0.14);
     border: 1px solid rgba(16, 185, 129, 0.35);
     color: #34d399;
-    font-size: 1.15rem;
+    font-size: 0.95rem;
     font-weight: 800;
-    padding: 0.3rem 0.8rem;
-    border-radius: 8px;
-    margin-bottom: 0.8rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    margin-bottom: 0.45rem;
 }
 
 .card-price-usd {
-    font-size: 0.85rem;
+    font-size: 0.76rem;
     font-weight: 500;
     color: #94a3b8;
-    margin-left: 0.4rem;
+    margin-left: 0.35rem;
 }
 
 .card-info-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    gap: 0.5rem;
     background: #080d1a;
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    border-radius: 8px;
-    padding: 0.75rem 0.9rem;
-    margin-bottom: 0.8rem;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    padding: 0.4rem 0.55rem;
+    margin-bottom: 0.45rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
 }
 
 .info-item {
-    font-size: 0.83rem;
+    font-size: 0.77rem;
     color: #cbd5e1;
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
+    line-height: 1.3;
 }
 
 .info-item strong {
@@ -409,40 +413,43 @@ div[data-testid="stChatMessage"]:has(div[data-testid="stChatMessageAvatarAssista
 }
 
 .card-desc {
-    font-size: 0.86rem;
-    color: #cbd5e1;
-    line-height: 1.5;
-    margin-bottom: 0.8rem;
+    font-size: 0.77rem;
+    color: #94a3b8;
+    line-height: 1.35;
+    margin-bottom: 0.45rem;
 }
 
 .card-chips-row {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
-    margin-bottom: 0.9rem;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
 }
 
 .amenity-chip {
     background: #141d33;
     border: 1px solid rgba(255, 255, 255, 0.08);
-    color: #94a3b8;
-    font-size: 0.74rem;
-    padding: 0.2rem 0.55rem;
-    border-radius: 12px;
+    color: #8b9bb4;
+    font-size: 0.68rem;
+    padding: 0.12rem 0.4rem;
+    border-radius: 8px;
+    white-space: nowrap;
 }
 
 .btn-card-cta {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     background: linear-gradient(135deg, #d4af37 0%, #aa8214 100%);
     color: #070b14 !important;
-    font-size: 0.82rem;
+    font-size: 0.75rem;
     font-weight: 700;
-    padding: 0.45rem 1rem;
-    border-radius: 6px;
+    padding: 0.35rem 0.75rem;
+    border-radius: 5px;
     text-decoration: none !important;
     transition: all 0.2s ease;
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+    box-shadow: 0 3px 8px rgba(212, 175, 55, 0.18);
+    margin-top: 0.2rem;
 }
 
 .btn-card-cta:hover {
