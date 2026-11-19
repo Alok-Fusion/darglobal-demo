@@ -1,6 +1,6 @@
 """
 DarGlobal & Wasalt Real Estate Advisory AI
-Enterprise Applied AI Application
+Enterprise Applied AI Application with Dynamic Data Sync and PDF Export
 Author: Alok Kushwaha
 """
 
@@ -22,6 +22,7 @@ from app.core.config import (
 )
 from app.core.rag_engine import RAGEngine
 from app.core.openrouter_client import OpenRouterClient
+from app.core.pdf_exporter import generate_advisory_pdf
 from app.ui.styles import CUSTOM_CSS
 from scraper.run_scrapers import run_pipeline
 
@@ -39,6 +40,19 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 if "last_synced_time" not in st.session_state:
     st.session_state.last_synced_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+INITIAL_WELCOME_MESSAGE = {
+    "role": "assistant",
+    "content": (
+        "**Welcome to the DarGlobal & Wasalt Real Estate Advisory Platform.**\n\n"
+        "I am your dedicated Applied AI advisor, powered by **NVIDIA Nemotron 3.5 Super VL**. "
+        "I synthesize verified real-time intelligence across **DarGlobal's** international branded portfolio "
+        "(*Pagani, Lamborghini, Aston Martin, Missoni, Trump, Elie Saab*) and **Wasalt's** premier Saudi Arabian "
+        "property marketplace across Riyadh, Jeddah, and Al Khobar.\n\n"
+        "How may I assist your real estate acquisition or investment research today?"
+    ),
+    "cards": []
+}
+
 if "rag_engine" not in st.session_state:
     try:
         st.session_state.rag_engine = RAGEngine(KNOWLEDGE_BASE_PATH)
@@ -51,20 +65,7 @@ if "rag_engine" not in st.session_state:
             st.stop()
 
 if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {
-            "role": "assistant",
-            "content": (
-                "**Welcome to the DarGlobal & Wasalt Real Estate Advisory Platform.**\n\n"
-                "I am your dedicated Applied AI advisor, powered by **NVIDIA Nemotron 3.5 Super VL**. "
-                "I synthesize verified real-time intelligence across **DarGlobal's** international branded portfolio "
-                "(*Pagani, Lamborghini, Aston Martin, Missoni, Trump, Elie Saab*) and **Wasalt's** premier Saudi Arabian "
-                "property marketplace across Riyadh, Jeddah, and Al Khobar.\n\n"
-                "How may I assist your real estate acquisition or investment research today?"
-            ),
-            "cards": []
-        }
-    ]
+    st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
 
 # Helper function to render a luxury property card
 def render_property_card(card: dict):
@@ -205,17 +206,6 @@ with st.sidebar:
         if st.button(label, key=f"btn_{label}", use_container_width=True):
             st.session_state.selected_prompt = query_text
 
-    st.markdown("---")
-    if st.button("Reset Conversation", use_container_width=True):
-        st.session_state.messages = [
-            {
-                "role": "assistant",
-                "content": "Conversation reset. How can I assist you with DarGlobal or Wasalt real estate today?",
-                "cards": []
-            }
-        ]
-        st.rerun()
-
 
 # Initialize OpenRouter Client (Model fixed to Nemotron, API key loaded silently from environment)
 client = OpenRouterClient(
@@ -257,32 +247,55 @@ tab_chat, tab_portfolio, tab_architecture = st.tabs([
 
 
 # ========================================================
-# TAB 1: LIVE CHAT
+# TAB 1: ADVISORY CHAT
 # ========================================================
 with tab_chat:
-    # Render Chat History
-    for message in st.session_state.messages:
-        role = message["role"]
-        with st.chat_message(role):
-            st.markdown(message["content"])
-            
-            cards = message.get("cards", [])
-            if cards:
-                st.markdown("#### Verified Portfolio Recommendations:")
-                for card in cards:
-                    render_property_card(card)
+    # Chat Action Bar (Clear Chat, Export to PDF)
+    col_status, col_clear, col_pdf = st.columns([3, 1, 1.2])
+    with col_status:
+        st.caption("Active Session &bull; Output rendered directly above input &bull; PDF export ready")
+    with col_clear:
+        if st.button("Clear Chat", key="btn_clear_chat", use_container_width=True):
+            st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
+            st.rerun()
+    with col_pdf:
+        pdf_bytes = generate_advisory_pdf(st.session_state.messages)
+        st.download_button(
+            label="Export to PDF",
+            data=pdf_bytes,
+            file_name=f"DarGlobal_Advisory_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+            mime="application/pdf",
+            key="btn_download_pdf",
+            use_container_width=True
+        )
 
-    # Check for prompt shortcut click
+    st.markdown("<hr style='margin: 0.5rem 0 1.2rem 0; border-color: rgba(255,255,255,0.06);'>", unsafe_allow_html=True)
+
+    # Chat Scroll Area (Padding at bottom ensures responses stay above the typing bar)
+    chat_container = st.container()
+    with chat_container:
+        for message in st.session_state.messages:
+            role = message["role"]
+            with st.chat_message(role):
+                st.markdown(message["content"])
+                
+                cards = message.get("cards", [])
+                if cards:
+                    st.markdown("#### Verified Portfolio Recommendations:")
+                    for card in cards:
+                        render_property_card(card)
+
+    # Check for prompt shortcut click from sidebar
     active_prompt = None
     if "selected_prompt" in st.session_state and st.session_state.selected_prompt:
         active_prompt = st.session_state.selected_prompt
         st.session_state.selected_prompt = None
 
-    # Chat Input Field
+    # Chat Input Field (Positioned neatly at bottom; responses render directly above)
     user_input = st.chat_input("Ask about DarGlobal developments or Wasalt Saudi properties...") or active_prompt
 
     if user_input:
-        # Add User Message
+        # Add User Message to History
         st.session_state.messages.append({"role": "user", "content": user_input})
         with st.chat_message("user"):
             st.markdown(user_input)
@@ -328,10 +341,13 @@ with tab_chat:
             "content": assistant_reply,
             "cards": retrieved_cards
         })
+        
+        # Trigger clean rerun to update PDF download buffer and scroll position immediately
+        st.rerun()
 
 
 # ========================================================
-# TAB 2: PORTFOLIO SHOWCASE (Interactive Property Grid)
+# TAB 2: PORTFOLIO CATALOG
 # ========================================================
 with tab_portfolio:
     st.markdown("### Verified Real Estate Asset Catalog")

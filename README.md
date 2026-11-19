@@ -108,59 +108,6 @@ darglobal-chatbot/
 
 ---
 
-## Deployment Guide: Render.com
-
-Deploying this application as a live Web Service on Render takes under 3 minutes:
-
-### Step 1: Push Code to GitHub
-
-Open PowerShell in the project directory:
-
-```powershell
-cd c:\Users\ak500\OneDrive\Desktop\IT\darglobal-chatbot
-
-# Initialize git repository (if not already done)
-git init
-
-# Stage all files (verifying .env is ignored)
-git add .
-
-# Commit changes
-git commit -m "feat: complete DarGlobal and Wasalt Applied AI real estate chatbot"
-
-# Rename branch to main
-git branch -M main
-
-# Link to your GitHub repository
-git remote add origin https://github.com/<your-username>/darglobal-chatbot.git
-
-# Push to GitHub
-git push -u origin main
-```
-
-*(Note: Verify that `git status` shows `.env` is omitted to protect your API keys).*
-
-### Step 2: Deploy on Render
-
-1. Log in to [Render Dashboard](https://dashboard.render.com/).
-2. Click **New +** and select **Web Service**.
-3. Select **Build and deploy from a Git repository** and connect your `darglobal-chatbot` repository.
-4. Render will automatically detect the `Dockerfile`.
-5. Specify the service settings:
-   * **Name:** `darglobal-wasalt-ai`
-   * **Region:** Frankfurt (EU) or Oregon (US)
-   * **Runtime:** `Docker`
-   * **Instance Type:** `Free`
-6. Under **Environment Variables**, add:
-   * `OPENROUTER_API_KEY`: `<Your-OpenRouter-API-Key>`
-   * `OPENROUTER_MODEL`: `nvidia/nemotron-3.5-super-vl:free`
-7. Click **Create Web Service**.
-
-Render will build the container and provide your live URL:  
-`https://darglobal-wasalt-ai.onrender.com`
-
----
-
 ## Local Setup & Development
 
 ### Standard Setup

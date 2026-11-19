@@ -240,6 +240,30 @@ div[data-testid="stSidebar"] label {
     transform: translateY(-1px) !important;
 }
 
+/* Chat Action Toolbar (Clear, Export, PDF) */
+.chat-action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #0c1220;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 0.5rem 0.9rem;
+    margin-bottom: 1.2rem;
+}
+
+.chat-status-label {
+    font-size: 0.8rem;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.chat-history-container {
+    padding-bottom: 85px !important;
+}
+
 /* ========================================================
    CHAT CONTAINER & MESSAGES (HIGH CONTRAST)
    ======================================================== */
