@@ -1,6 +1,7 @@
 """
 DarGlobal & Wasalt Real Estate Advisory AI
-Enterprise Applied AI Application with Dynamic Data Sync and PDF Export
+Enterprise Applied AI Application with Dynamic Data Sync, PDF Export,
+Single-Inquiry Focus, and Concurrency Input Locking.
 Author: Alok Kushwaha
 """
 
@@ -40,6 +41,12 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 if "last_synced_time" not in st.session_state:
     st.session_state.last_synced_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
+if "is_processing" not in st.session_state:
+    st.session_state.is_processing = False
+
+if "pending_query" not in st.session_state:
+    st.session_state.pending_query = None
+
 INITIAL_WELCOME_MESSAGE = {
     "role": "assistant",
     "content": (
@@ -67,6 +74,9 @@ if "rag_engine" not in st.session_state:
 
 if "messages" not in st.session_state:
     st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
+
+# Global processing lock flag
+is_busy = st.session_state.is_processing
 
 # Helper function to render a luxury property card
 def render_property_card(card: dict):
@@ -137,8 +147,8 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # Dynamic Sync Trigger Button
-    if st.button("Sync Latest Market Data", use_container_width=True):
+    # Dynamic Sync Trigger Button (Disabled if busy)
+    if st.button("Sync Latest Market Data", use_container_width=True, disabled=is_busy):
         with st.spinner("Refreshing DarGlobal and Wasalt listings..."):
             new_kb = run_pipeline()
             st.session_state.rag_engine = RAGEngine(new_kb)
@@ -149,20 +159,22 @@ with st.sidebar:
     st.markdown("---")
     st.markdown("### Filters")
 
-    # Dynamic Portfolio Source Filter
+    # Dynamic Portfolio Source Filter (Disabled if busy)
     source_filter = st.radio(
         "Portfolio Source",
         options=["All", "DarGlobal", "Wasalt"],
         index=0,
-        horizontal=True
+        horizontal=True,
+        disabled=is_busy
     )
 
-    # Dynamic City / Region Filter
+    # Dynamic City / Region Filter (Disabled if busy)
     city_options = ["All", "Dubai", "Riyadh", "Jeddah", "Al Khobar", "Muscat", "Doha", "London", "Benahavís"]
     city_filter = st.selectbox(
         "Market / City",
         options=city_options,
-        index=0
+        index=0,
+        disabled=is_busy
     )
 
     st.markdown("---")
@@ -203,13 +215,19 @@ with st.sidebar:
         ("Wasalt Electronic Auctions & REGA Compliance", "Explain Wasalt electronic auctions and REGA compliance.")
     ]
 
+    # Render Sample Queries (Completely disabled when another query is in progress)
     for label, query_text in sample_queries:
-        if st.button(label, key=f"btn_{label}", use_container_width=True):
-            st.session_state.selected_prompt = query_text
+        if st.button(label, key=f"btn_{label}", use_container_width=True, disabled=is_busy):
+            if not is_busy:
+                st.session_state.pending_query = query_text
+                st.session_state.is_processing = True
+                st.rerun()
 
     st.markdown("---")
-    if st.button("New Inquiry / Reset", key="btn_sidebar_reset", use_container_width=True):
+    if st.button("New Inquiry / Reset", key="btn_sidebar_reset", use_container_width=True, disabled=is_busy):
         st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
+        st.session_state.pending_query = None
+        st.session_state.is_processing = False
         st.rerun()
 
 
@@ -256,14 +274,21 @@ tab_chat, tab_portfolio, tab_architecture = st.tabs([
 # TAB 1: ADVISORY CHAT
 # ========================================================
 with tab_chat:
-    # Chat Action Bar (Clear Chat, Export to PDF)
+    # Chat Action Bar (Disabled when busy)
     col_status, col_clear, col_pdf = st.columns([3, 1.2, 1.2])
     with col_status:
-        st.caption("Active Session &bull; Single Inquiry Focus &bull; PDF export ready")
+        if is_busy:
+            st.caption("Status: **Generating response...** &bull; Other inputs locked")
+        else:
+            st.caption("Active Session &bull; Single Inquiry Focus &bull; PDF export ready")
+            
     with col_clear:
-        if st.button("New Inquiry", key="btn_clear_chat", use_container_width=True):
+        if st.button("New Inquiry", key="btn_clear_chat", use_container_width=True, disabled=is_busy):
             st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
+            st.session_state.pending_query = None
+            st.session_state.is_processing = False
             st.rerun()
+            
     with col_pdf:
         pdf_bytes = generate_advisory_pdf(st.session_state.messages)
         st.download_button(
@@ -272,7 +297,8 @@ with tab_chat:
             file_name=f"DarGlobal_Advisory_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
             mime="application/pdf",
             key="btn_download_pdf",
-            use_container_width=True
+            use_container_width=True,
+            disabled=is_busy
         )
 
     st.markdown("<hr style='margin: 0.5rem 0 1.2rem 0; border-color: rgba(255,255,255,0.06);'>", unsafe_allow_html=True)
@@ -280,83 +306,99 @@ with tab_chat:
     # Chat Scroll Area (Padding at bottom ensures responses stay above the typing bar)
     chat_container = st.container()
     with chat_container:
-        for message in st.session_state.messages:
-            role = message["role"]
-            with st.chat_message(role):
-                st.markdown(message["content"])
-                
-                cards = message.get("cards", [])
-                if cards:
-                    st.markdown("#### Verified Portfolio Recommendations:")
-                    for card in cards:
-                        render_property_card(card)
-                
-                msg_time = message.get("timestamp", "")
-                if msg_time:
-                    st.caption(f"{msg_time}")
+        # If not actively processing a new query, render the current messages
+        if not (is_busy and st.session_state.pending_query):
+            for message in st.session_state.messages:
+                role = message["role"]
+                with st.chat_message(role):
+                    st.markdown(message["content"])
+                    
+                    cards = message.get("cards", [])
+                    if cards:
+                        st.markdown("#### Verified Portfolio Recommendations:")
+                        for card in cards:
+                            render_property_card(card)
+                    
+                    msg_time = message.get("timestamp", "")
+                    if msg_time:
+                        st.caption(f"{msg_time}")
 
-    # Check for prompt shortcut click from sidebar
-    active_prompt = None
-    if "selected_prompt" in st.session_state and st.session_state.selected_prompt:
-        active_prompt = st.session_state.selected_prompt
-        st.session_state.selected_prompt = None
-
-    # Chat Input Field (Positioned neatly at bottom; responses render directly above)
-    user_input = st.chat_input("Ask about DarGlobal developments or Wasalt Saudi properties...") or active_prompt
-
-    if user_input:
-        current_time = datetime.now().strftime("%d %b %Y, %I:%M %p")
+    # Active Query Execution Block (Locked & In-Progress)
+    if is_busy and st.session_state.pending_query:
+        current_inquiry = st.session_state.pending_query
+        user_timestamp = datetime.now().strftime("%d %b %Y, %I:%M %p")
         
+        # Render the user question immediately
         with st.chat_message("user"):
-            st.markdown(user_input)
-            st.caption(f"{current_time}")
+            st.markdown(current_inquiry)
+            st.caption(f"{user_timestamp}")
 
-        # Retrieve matching properties dynamically via BM25 with active filters
-        rag = st.session_state.rag_engine
-        retrieved_results = rag.search(
-            query=user_input,
-            top_k=3,
-            source_filter=source_filter,
-            city_filter=city_filter
-        )
-        rag_context = rag.build_system_context(retrieved_results)
-        retrieved_cards = [doc for doc, score in retrieved_results]
-
-        # Call OpenRouter with NVIDIA Nemotron
+        # Render assistant thinking & generation block
         with st.chat_message("assistant"):
             with st.spinner("Synthesizing portfolio intelligence with NVIDIA Nemotron 3.5 Super VL..."):
-                response_data = client.generate_response(
-                    messages=[{"role": "user", "content": user_input}],
-                    rag_context=rag_context
-                )
-                
-                assistant_reply = response_data["content"]
-                asst_time = datetime.now().strftime("%d %b %Y, %I:%M %p")
-                
-                st.markdown(assistant_reply)
-                st.caption(f"Model: `NVIDIA Nemotron 3.5 Super VL (Free Tier)` &bull; {asst_time}")
-                
-                if retrieved_cards:
-                    st.markdown("#### Verified Portfolio Recommendations:")
-                    for card in retrieved_cards:
-                        render_property_card(card)
+                try:
+                    # 1. RAG Retrieval with active filters
+                    rag = st.session_state.rag_engine
+                    retrieved_results = rag.search(
+                        query=current_inquiry,
+                        top_k=3,
+                        source_filter=source_filter,
+                        city_filter=city_filter
+                    )
+                    rag_context = rag.build_system_context(retrieved_results)
+                    retrieved_cards = [doc for doc, score in retrieved_results]
 
-        # STRICTLY ONE CHAT AT A TIME: Replace state with only the current inquiry and response
-        st.session_state.messages = [
-            {
-                "role": "user",
-                "content": user_input,
-                "timestamp": current_time
-            },
-            {
-                "role": "assistant",
-                "content": assistant_reply,
-                "cards": retrieved_cards,
-                "timestamp": asst_time
-            }
-        ]
-        
-        # Trigger clean rerun to update PDF buffer and keep exactly one chat on screen
+                    # 2. Call OpenRouter with NVIDIA Nemotron
+                    response_data = client.generate_response(
+                        messages=[{"role": "user", "content": current_inquiry}],
+                        rag_context=rag_context
+                    )
+                    
+                    assistant_reply = response_data["content"]
+                    asst_timestamp = datetime.now().strftime("%d %b %Y, %I:%M %p")
+                    
+                    st.markdown(assistant_reply)
+                    st.caption(f"Model: `NVIDIA Nemotron 3.5 Super VL (Free Tier)` &bull; {asst_timestamp}")
+                    
+                    if retrieved_cards:
+                        st.markdown("#### Verified Portfolio Recommendations:")
+                        for card in retrieved_cards:
+                            render_property_card(card)
+
+                    # Update session state with strictly this one chat
+                    st.session_state.messages = [
+                        {
+                            "role": "user",
+                            "content": current_inquiry,
+                            "timestamp": user_timestamp
+                        },
+                        {
+                            "role": "assistant",
+                            "content": assistant_reply,
+                            "cards": retrieved_cards,
+                            "timestamp": asst_timestamp
+                        }
+                    ]
+
+                except Exception as ex:
+                    st.error(f"Error during advisory synthesis: {ex}")
+                finally:
+                    # Unlock the system
+                    st.session_state.pending_query = None
+                    st.session_state.is_processing = False
+                    st.rerun()
+
+    # Chat Input Field (Disabled & Locked when is_busy is True)
+    input_placeholder = (
+        "Advisory synthesis in progress, please wait..."
+        if is_busy
+        else "Ask about DarGlobal developments or Wasalt Saudi properties..."
+    )
+    user_input = st.chat_input(input_placeholder, disabled=is_busy)
+
+    if user_input and not is_busy:
+        st.session_state.pending_query = user_input
+        st.session_state.is_processing = True
         st.rerun()
 
 
@@ -369,11 +411,11 @@ with tab_portfolio:
     
     col_filter1, col_filter2, col_filter3 = st.columns([2, 1, 1])
     with col_filter1:
-        search_filter = st.text_input("Search developments by name, brand, or location:", "")
+        search_filter = st.text_input("Search developments by name, brand, or location:", "", disabled=is_busy)
     with col_filter2:
-        category_choice = st.selectbox("Source Platform:", ["All", "DarGlobal", "Wasalt"])
+        category_choice = st.selectbox("Source Platform:", ["All", "DarGlobal", "Wasalt"], disabled=is_busy)
     with col_filter3:
-        market_choice = st.selectbox("Target Market:", ["All", "Dubai", "Riyadh", "Jeddah", "Al Khobar", "Muscat", "Doha", "London", "Benahavís"])
+        market_choice = st.selectbox("Target Market:", ["All", "Dubai", "Riyadh", "Jeddah", "Al Khobar", "Muscat", "Doha", "London", "Benahavís"], disabled=is_busy)
 
     all_docs = st.session_state.rag_engine.documents
     filtered_docs = all_docs
@@ -390,7 +432,7 @@ with tab_portfolio:
     if search_filter.strip():
         q = search_filter.lower()
         filtered_docs = [
-            d for d in filtered_docs
+            d for d in filtered_docs 
             if q in d.get("title", "").lower() 
             or q in d.get("city", "").lower() 
             or q in d.get("brand_partner", "").lower()
