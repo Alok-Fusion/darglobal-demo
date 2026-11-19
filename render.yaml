@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: darglobal-wasalt-ai-chatbot
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerContext: .
+    dockerfilePath: Dockerfile
+    healthCheckPath: /_stcore/health
+    envVars:
+      - key: OPENROUTER_MODEL
+        value: nvidia/nemotron-3.5-super-vl:free
+      - key: OPENROUTER_API_KEY
+        sync: false

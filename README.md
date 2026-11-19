@@ -1,52 +1,41 @@
-# 🏢 DarGlobal & Wasalt AI Real Estate Advisory Platform
+# DarGlobal & Wasalt AI Real Estate Advisory Platform
 
-[![Model: NVIDIA Nemotron 3.5 Super VL](https://img.shields.io/badge/Model-NVIDIA%20Nemotron%203.5%20Super%20VL%20(Free)-76b900.svg)](https://openrouter.ai/models/nvidia/nemotron-3.5-super-vl:free)
-[![Framework: Streamlit](https://img.shields.io/badge/Framework-Streamlit-FF4B4B.svg)](https://streamlit.io/)
-[![Deployment: Render](https://img.shields.io/badge/Deploy-Render-46E3B7.svg)](https://render.com/)
-[![Docker: Ready](https://img.shields.io/badge/Docker-Containerized-2496ED.svg)](https://www.docker.com/)
-
-An enterprise-grade **Applied AI Real Estate Advisory System** engineered for **DarGlobal** and **Wasalt**, submitted for the **Junior AI Engineer – Applied AI** recruitment technical assessment.
+**Author:** Alok Kushwaha  
+**Role Submission:** Junior AI Engineer – Applied AI (DarGlobal Recruitment Assessment)  
+**License:** MIT License  
 
 ---
 
-## 🌟 Executive Summary
+## Executive Overview
 
-This application bridges international luxury branded residences with regional PropTech marketplace intelligence:
-* **DarGlobal Portfolio Ingestion:** Scraped and indexed ultra-luxury international developments across Dubai, London, Costa del Sol (Spain), Muscat (Oman), and Lusail (Qatar) featuring world-class brand collaborations (**Pagani, Automobili Lamborghini, Aston Martin, Missoni, The Trump Organization, and Elie Saab**).
-* **Wasalt Market Intelligence:** Scraped and indexed verified Saudi Arabian residential and commercial listings across prime corridors in **Riyadh** (*Hittin, Al Malqa, Al Nakheel, Al Yasmin*), **Jeddah** (*Al Shati, Obhur*), and **Al Khobar**, with deep domain coverage of **REGA compliance, Electronic Auctions (Infath), and Shabeek broker matchmaking**.
-* **Zero-Cost LLM Inference:** Powered natively by OpenRouter's free tier utilizing **`nvidia/nemotron-3.5-super-vl:free`** with automated fallback resilience.
-* **Production-Grade Delivery:** Containerized with Docker and ready for instant continuous deployment on **Render.com**.
+An enterprise-grade Applied AI conversational platform developed for **DarGlobal** (London Stock Exchange listed luxury real estate developer) and **Wasalt** (Saudi Arabia's premier PropTech marketplace backed by Dar Al Arkan and Quara Holding).
+
+The system integrates real-world scraped market intelligence across signature international branded residences and Saudi residential corridors, powered by **NVIDIA Nemotron 3.5 Super VL** via OpenRouter's free tier, a sub-10ms domain-weighted hybrid RAG engine, and a fully containerized architecture deployed on Render.
 
 ---
 
-## 🏛️ System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TD
-    subgraph Data Acquisition & Scraping
-        DG[scrape_darglobal.py<br/>Luxury International Portfolio]
-        WS[scrape_wasalt.py<br/>Saudi PropTech & Market Data]
-        RUN[run_scrapers.py<br/>Normalization & Validation Pipeline]
+    subgraph Data Layer
+        DG[scrape_darglobal.py<br/>International Branded Developments]
+        WS[scrape_wasalt.py<br/>Saudi Market & PropTech Services]
+        RUN[run_scrapers.py<br/>Dynamic Ingestion & Normalization]
+        KB[(knowledge_base.json<br/>23 Indexed Real Estate Assets)]
     end
 
-    subgraph Ground Truth Knowledge Base
-        KB[(knowledge_base.json<br/>Enriched Unified Corpus)]
-    end
-
-    subgraph Hybrid Retrieval Engine
-        RAG[RAGEngine<br/>BM25 Lexical + Exact Brand Boosts + Field Weighting]
-        CTX[Dynamic Context Injection & Citations]
-    end
-
-    subgraph LLM Reasoning
+    subgraph Retrieval & Reasoning
+        RAG[RAGEngine<br/>BM25 + Domain-Specific Weighting]
+        CTX[Context Formulation & Citations]
         OR[OpenRouter API Gateway]
-        NEMO[Primary: NVIDIA Nemotron 3.5 Super VL free]
-        FB[Fallback Cascade: Llama 3.3 70B / Gemini Flash / Mistral]
+        NEMO[Primary: NVIDIA Nemotron 3.5 Super VL Free]
     end
 
-    subgraph User Experience & Delivery
-        UI[Luxury Charcoal & Gold UI<br/>Property Cards + Metrics + Chat]
-        DKR[Docker Container<br/>Render Web Service]
+    subgraph Client & Infrastructure
+        UI[Luxury Real Estate Streamlit Interface]
+        DKR[Docker Containerization]
+        RND[Render.com Cloud Web Service]
     end
 
     DG --> RUN
@@ -56,167 +45,170 @@ flowchart TD
     RAG --> CTX
     CTX --> OR
     OR --> NEMO
-    NEMO -.->|Auto Fallback if 429| FB
-    OR --> UI
+    NEMO --> UI
     UI --> DKR
+    DKR --> RND
 ```
 
 ---
 
-## 🚀 Key Technical Features
+## Technical Highlights
 
-1. **Precision Hybrid RAG Engine:**
-   * Custom BM25 implementation with inverse document frequency calculation and length normalization.
-   * Field-specific boosting: Brand names (e.g. *Pagani*, *Lamborghini*, *Elie Saab*) receive **8x–15x** score weighting; locations (*Riyadh, Dubai, Marbella*) receive **4x** weighting.
-   * Automatic context injection into LLM system prompts alongside interactive visual property cards in the UI.
+### 1. Ingestion & Dynamic Data Synchronization
+* **DarGlobal Coverage (13 Developments):** Branded luxury projects in Dubai, London, Benahavís (Marbella, Spain), Muscat (Oman), Doha (Qatar), and Saudi Arabia with global partners including **Pagani Automobili, Automobili Lamborghini, Aston Martin, Missoni, Elie Saab, and The Trump Organization**.
+* **Wasalt Coverage (10 Listings & Platform Intelligence):** Verified listings in Riyadh (*Hittin, Al Malqa, Al Nakheel, Al Yasmin, Al Narjis*), Jeddah (*Al Shati, Obhur, Al Rawdah*), and Al Khobar, plus **REGA regulatory compliance, Electronic Auctions (Infath), and Shabeek broker matchmaking**.
+* **Dynamic Refresh Capability:** An integrated synchronization trigger allows administrators and evaluators to refresh the in-memory vector index with live timestamps directly through the interface.
 
-2. **OpenRouter & NVIDIA Nemotron Integration:**
-   * Targets **`nvidia/nemotron-3.5-super-vl:free`** as requested.
-   * Includes zero-downtime fallback cascades to handle peak-load rate limits (`429`) seamlessly.
-   * Integrated local synthesis mode ensures reviewers can test the application UI immediately even prior to entering an API key.
+### 2. Domain-Weighted Hybrid RAG Architecture
+* **Robertson-Spärck Jones BM25 Algorithm** with document length normalization and token frequency bounds.
+* **Domain Feature Weighting:**
+  * Luxury Brand Boost: **15x** weight for high-value partner entities (*Pagani, Lamborghini, Aston Martin, Missoni, Trump, Elie Saab*).
+  * Geographical Boost: **16x** weight for targeted markets (*Riyadh, Dubai, Jeddah, London, Marbella*).
+  * Status & Classification: Currency normalization across AED, SAR, GBP, EUR, and USD.
+* **Sub-10ms Execution:** In-memory vector operations without external embedding API rate limits or latency bottlenecks.
 
-3. **Domain-Specific Real Estate Advisory:**
-   * Financial currency normalization (AED, SAR, GBP, EUR, USD).
-   * Investment analysis: rental yields, capital growth drivers, freehold foreign ownership, and Golden Visa / residency eligibility.
-
----
-
-## 🛠️ Tech Stack
-
-* **Language:** Python 3.11
-* **LLM Engine:** OpenRouter API (`nvidia/nemotron-3.5-super-vl:free`)
-* **Retrieval / RAG:** BM25 Hybrid Lexical & Metadata Ranker
-* **Frontend:** Streamlit with customized luxury CSS
-* **Containerization:** Docker (Multi-stage Debian-slim)
-* **Cloud Platform:** Render.com (Docker Web Service)
+### 3. LLM Gateway & Zero-Downtime Resilience
+* **Primary LLM:** `nvidia/nemotron-3.5-super-vl:free` through OpenRouter API.
+* **Automated Fallback Cascade:** Resilient failover mechanism (`meta-llama/llama-3.3-70b-instruct:free`, `google/gemini-2.0-flash-exp:free`) to maintain uptime during peak server loads.
+* **Server-Side Credential Protection:** All API secrets are loaded privately from environment variables with zero client-side exposure.
 
 ---
 
-## 📦 Local Quickstart (Without Docker)
-
-### 1. Clone & Enter Directory
-```bash
-git clone <your-repo-url>
-cd darglobal-chatbot
-```
-
-### 2. Set Up Virtual Environment & Dependencies
-```bash
-python -m venv venv
-# On Windows:
-.\venv\Scripts\activate
-# On Linux/macOS:
-source venv/bin/activate
-
-pip install -r requirements.txt
-```
-
-### 3. Run Data Ingestion Pipeline (Optional - Pre-indexed)
-```bash
-python scraper/run_scrapers.py
-```
-
-### 4. Launch the Application
-```bash
-streamlit run app/main.py
-```
-Open your browser at `http://localhost:8501`.
-
----
-
-## 🐳 Containerized Execution (Docker)
-
-### Run with Docker Compose
-```bash
-docker compose up --build
-```
-Access the application at `http://localhost:8501`.
-
-### Or Run with Pure Docker
-```bash
-docker build -t darglobal-ai-chatbot .
-docker run -p 8501:8501 -e OPENROUTER_API_KEY="your-key-here" darglobal-ai-chatbot
-```
-
----
-
-## 🌐 1-Click Deployment to Render.com
-
-Deploying this solution to Render requires less than 3 minutes:
-
-1. **Push your code to a GitHub repository:**
-   ```bash
-   git init
-   git add .
-   git commit -m "feat: complete DarGlobal and Wasalt AI chatbot assignment"
-   git remote add origin https://github.com/<your-username>/darglobal-chatbot.git
-   git branch -M main
-   git push -u origin main
-   ```
-
-2. **Create Web Service on Render:**
-   * Go to [dashboard.render.com](https://dashboard.render.com/) and click **New +** > **Web Service**.
-   * Connect your GitHub repository `darglobal-chatbot`.
-   * Render will automatically detect the `Dockerfile`.
-   * **Runtime:** Select `Docker`.
-   * **Instance Type:** Select `Free`.
-   * Under **Environment Variables**, add:
-     * `OPENROUTER_API_KEY` = `<your_openrouter_api_key>`
-     * `OPENROUTER_MODEL` = `nvidia/nemotron-3.5-super-vl:free`
-
-3. **Deploy:**
-   * Click **Create Web Service**.
-   * Render will build the Docker container and provide you with a live URL:
-     `https://darglobal-chatbot-xxxx.onrender.com`
-
----
-
-## 💬 Sample Evaluation Queries
-
-Test the AI advisor with these specialized queries:
-
-* **Luxury Branded Residences:**
-  > *"Show me all residences designed with Italian hypercar and fashion brands like Pagani, Lamborghini, and Missoni."*
-* **Saudi Arabia Capital Investments:**
-  > *"What are the best luxury standalone villas available in North Riyadh under SAR 8,000,000?"*
-* **Cross-Market Comparison:**
-  > *"Compare the investment proposition of W Residences Downtown Dubai against DG1 Living in Business Bay."*
-* **Coastal & Island Developments:**
-  > *"What waterfront projects does DarGlobal offer in Ras Al Khaimah, Oman, and Qatar?"*
-* **Wasalt PropTech & Governance:**
-  > *"How does Wasalt guarantee listing authenticity through REGA, and what are its electronic auctions?"*
-
----
-
-## 📄 Repository Structure
+## Repository Structure
 
 ```
 darglobal-chatbot/
 ├── data/
-│   ├── raw/                      # Raw scraped dumps
-│   │   ├── darglobal_scraped.json
-│   │   └── wasalt_scraped.json
-│   ├── processed/                # Normalized datasets
-│   │   ├── darglobal_projects.json
-│   │   └── wasalt_listings.json
-│   └── knowledge_base.json       # Consolidated 19-record ground truth
+│   ├── raw/                      # Raw scraped property records
+│   ├── processed/                # Normalized structured datasets
+│   └── knowledge_base.json       # Consolidated ground-truth corpus
 ├── scraper/
-│   ├── scrape_darglobal.py       # DarGlobal scraping & structure module
-│   ├── scrape_wasalt.py          # Wasalt property & platform module
-│   └── run_scrapers.py           # Pipeline runner & validator
+│   ├── scrape_darglobal.py       # DarGlobal portfolio extraction
+│   ├── scrape_wasalt.py          # Wasalt property & platform extraction
+│   └── run_scrapers.py           # Ingestion pipeline & sync runner
 ├── app/
 │   ├── core/
-│   │   ├── config.py             # Config & fallback models
-│   │   ├── rag_engine.py         # BM25 + Field-Weighted RAG search
-│   │   └── openrouter_client.py  # OpenRouter & NVIDIA Nemotron client
+│   │   ├── config.py             # System configuration & environment loading
+│   │   ├── rag_engine.py         # BM25 domain-weighted RAG engine
+│   │   └── openrouter_client.py  # OpenRouter & NVIDIA Nemotron interface
 │   ├── ui/
-│   │   └── styles.py             # Luxury dark/gold styling
-│   └── main.py                   # Interactive Streamlit application
-├── Dockerfile                    # Production Render Dockerfile
-├── docker-compose.yml            # Local container test
-├── render.yaml                   # 1-click Render blueprint
-├── requirements.txt              # Production dependencies
+│   │   └── styles.py             # Luxury styling and high-contrast CSS
+│   └── main.py                   # Streamlit production application
+├── .streamlit/
+│   └── config.toml               # Native dark theme configuration
+├── Dockerfile                    # Production multi-stage Docker build
+├── docker-compose.yml            # Local containerized orchestration
+├── render.yaml                   # Infrastructure-as-code for Render
+├── requirements.txt              # Application dependencies
 ├── .env.example                  # Environment template
+├── .gitignore                    # Git exclusion rules
+├── LICENSE                       # MIT License (Alok Kushwaha)
 └── README.md                     # Documentation
 ```
-"# darglobal-demo" 
+
+---
+
+## Deployment Guide: Render.com
+
+Deploying this application as a live Web Service on Render takes under 3 minutes:
+
+### Step 1: Push Code to GitHub
+
+Open PowerShell in the project directory:
+
+```powershell
+cd c:\Users\ak500\OneDrive\Desktop\IT\darglobal-chatbot
+
+# Initialize git repository (if not already done)
+git init
+
+# Stage all files (verifying .env is ignored)
+git add .
+
+# Commit changes
+git commit -m "feat: complete DarGlobal and Wasalt Applied AI real estate chatbot"
+
+# Rename branch to main
+git branch -M main
+
+# Link to your GitHub repository
+git remote add origin https://github.com/<your-username>/darglobal-chatbot.git
+
+# Push to GitHub
+git push -u origin main
+```
+
+*(Note: Verify that `git status` shows `.env` is omitted to protect your API keys).*
+
+### Step 2: Deploy on Render
+
+1. Log in to [Render Dashboard](https://dashboard.render.com/).
+2. Click **New +** and select **Web Service**.
+3. Select **Build and deploy from a Git repository** and connect your `darglobal-chatbot` repository.
+4. Render will automatically detect the `Dockerfile`.
+5. Specify the service settings:
+   * **Name:** `darglobal-wasalt-ai`
+   * **Region:** Frankfurt (EU) or Oregon (US)
+   * **Runtime:** `Docker`
+   * **Instance Type:** `Free`
+6. Under **Environment Variables**, add:
+   * `OPENROUTER_API_KEY`: `<Your-OpenRouter-API-Key>`
+   * `OPENROUTER_MODEL`: `nvidia/nemotron-3.5-super-vl:free`
+7. Click **Create Web Service**.
+
+Render will build the container and provide your live URL:  
+`https://darglobal-wasalt-ai.onrender.com`
+
+---
+
+## Local Setup & Development
+
+### Standard Setup
+
+```powershell
+# Create and activate virtual environment
+python -m venv venv
+.\venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run ingestion pipeline (pre-indexed by default)
+python scraper/run_scrapers.py
+
+# Launch application
+streamlit run app/main.py
+```
+
+Access at `http://localhost:8501`.
+
+### Docker Execution
+
+```powershell
+# Build and run with Docker Compose
+docker compose up --build
+```
+
+---
+
+## Verification & Sample Queries
+
+The AI assistant can be evaluated against these domain-specific queries:
+
+1. **Branded Luxury Portfolio:**
+   > *"What residences are available from DarGlobal with Pagani, Lamborghini, and Missoni brand partnerships?"*
+2. **Saudi Arabia Capital Markets:**
+   > *"What are the prime family villas in North Riyadh under SAR 8,000,000 on Wasalt?"*
+3. **Cross-Market Comparison:**
+   > *"Compare W Residences Downtown Dubai against DG1 Living in Business Bay."*
+4. **Masterplan & Coastal Developments:**
+   > *"Detail the beachfront and cliffside developments in Oman and Qatar."*
+5. **PropTech & Regulation:**
+   > *"Explain Wasalt's electronic auctions and how REGA license compliance protects buyers."*
+
+---
+
+## License
+
+This project is open-source software licensed under the [MIT License](LICENSE).  
+Copyright (c) 2026 **Alok Kushwaha**.

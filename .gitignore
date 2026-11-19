@@ -1,0 +1,30 @@
+# Environment Variables & Secrets
+.env
+.env.local
+.env.*.local
+
+# Python Environments & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv/
+
+# Streamlit Local Secrets
+.streamlit/secrets.toml
+
+# IDE & Editor Settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini

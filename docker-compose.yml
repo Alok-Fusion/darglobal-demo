@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  darglobal-ai:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: darglobal-chatbot
+    ports:
+      - "8501:8501"
+    environment:
+      - PORT=8501
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODEL=nvidia/nemotron-3.5-super-vl:free
+    restart: unless-stopped
