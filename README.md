@@ -4,7 +4,7 @@
 **Role Submission:** Junior AI Engineer – Applied AI (DarGlobal Recruitment Assessment)  
 **License:** MIT License  
 
-**Live demo:** _add your Render URL here_  
+**Live demo:** https://darglobal-demo.onrender.com  
 **Data:** 534 records scraped from darglobal.co.uk and wasalt.sa on 20 Nov 2026 (see `data/scrape_meta.json`)
 
 ---
@@ -176,7 +176,7 @@ docker compose up --build            # http://localhost:8501
 
 ### Deploy on Render
 
-New → Blueprint → select this repository (uses `render.yaml`) → set `OPENROUTER_API_KEY` → Apply. The free plan sleeps after 15 minutes idle; the first request after that takes about a minute.
+New → Blueprint → select this repository (uses `render.yaml`) → set `OPENROUTER_API_KEY` → Apply. The free plan sleeps after 15 minutes idle; a cron-job.org job pings `https://darglobal-demo.onrender.com/_stcore/health` every 10 minutes so it stays awake.
 
 ---
 
