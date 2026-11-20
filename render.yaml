@@ -7,8 +7,19 @@ services:
     dockerContext: .
     dockerfilePath: Dockerfile
     healthCheckPath: /_stcore/health
+    # Data-only commits from the scheduled scrape don't redeploy: the running app
+    # pulls the new data itself (app/core/live_data.py) and keeps answering.
+    buildFilter:
+      ignoredPaths:
+        - data/**
     envVars:
       - key: OPENROUTER_MODEL
         value: nvidia/nemotron-3.5-super-vl:free
       - key: OPENROUTER_API_KEY
         sync: false
+      - key: REFRESH_MODE
+        value: remote
+      - key: REFRESH_INTERVAL_MINUTES
+        value: "30"
+      - key: DATA_SYNC_BASE_URL
+        value: https://raw.githubusercontent.com/Alok-Fusion/darglobal-demo/main/data

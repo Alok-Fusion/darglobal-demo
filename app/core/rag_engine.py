@@ -47,7 +47,10 @@ class RAGEngine:
                 (doc.get("property_type", "") + " ") * 2 +
                 doc.get("description", "") + " " +
                 " ".join(doc.get("amenities", [])) + " " +
-                doc.get("investment_highlights", "")
+                doc.get("investment_highlights", "") + " " +
+                doc.get("bedrooms", "") + " " + doc.get("status", "") + " " + doc.get("category", "") + " " +
+                " ".join(f"{f.get('q', '')} {f.get('a', '')}" for f in doc.get("faqs", []) or []) + " " +
+                doc.get("details", "")[:1500]
             )
             tokens = self.tokenize(text_repr)
             self.doc_tokens.append(tokens)
@@ -192,8 +195,17 @@ class RAGEngine:
                 f"- **Description**: {doc.get('description')}",
                 f"- **Key Amenities**: {amenities_str}",
                 f"- **Investment / Market Insights**: {doc.get('investment_highlights')}",
-                f"- **Official Link**: {doc.get('source_url')}"
             ]
+            if doc.get("area"):
+                lines.append(f"- **Area**: {doc.get('area')}")
+            faqs = doc.get("faqs") or []
+            if faqs:
+                lines.append("- **FAQ (from the page)**: " + " ".join(f"Q: {f['q']} A: {f['a']}" for f in faqs[:6])[:2500])
+            if doc.get("details") and len(doc.get("description", "")) < 400:
+                lines.append(f"- **More page text**: {doc['details'][:1200]}")
+            lines.append(f"- **Official Link**: {doc.get('source_url')}")
+            if doc.get("scraped_at"):
+                lines.append(f"- **Scraped at**: {doc['scraped_at']}")
             context_lines.append("\n".join(lines))
 
         return "\n\n".join(context_lines)

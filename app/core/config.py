@@ -27,11 +27,12 @@ PRIMARY_MODEL = os.getenv("OPENROUTER_MODEL", "nvidia/nemotron-3.5-super-vl:free
 
 # High-reliability fallback models in case of rate limits on the free tier
 FALLBACK_MODELS = [
+    # All checked against https://openrouter.ai/api/v1/models on 20 Nov 2026.
     "nvidia/nemotron-3.5-super-vl:free",
-    "meta-llama/llama-3.3-70b-instruct:free",
-    "google/gemini-2.0-flash-exp:free",
-    "mistralai/mistral-7b-instruct:free",
-    "qwen/qwen-2.5-72b-instruct:free"
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "google/gemma-4-31b-it:free",
+    "google/gemma-4-26b-a4b-it:free",
+    "nvidia/nemotron-3.5-lightning:free",
 ]
 
 # Application Settings

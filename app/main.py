@@ -25,7 +25,26 @@ from app.core.rag_engine import RAGEngine
 from app.core.openrouter_client import OpenRouterClient
 from app.core.pdf_exporter import generate_advisory_pdf
 from app.ui.styles import CUSTOM_CSS
-from scraper.run_scrapers import run_pipeline
+from app.core.live_data import LiveKnowledgeBase
+from scraper.run_scrapers import last_scrape_info
+
+
+def _scrape_label() -> str:
+    """'Last synced' text from data/scrape_meta.json (when each site was actually scraped)."""
+    meta = last_scrape_info()
+    parts = []
+    for key, name in (("darglobal", "DarGlobal"), ("wasalt", "Wasalt")):
+        info = meta.get(key) or {}
+        when = (info.get("scraped_at") or "")[:16].replace("T", " ")
+        if when:
+            parts.append(f"{name} {when} UTC")
+    return " · ".join(parts) or datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+
+@st.cache_resource
+def get_live_kb() -> LiveKnowledgeBase:
+    """One shared knowledge base + background refresher for the whole server (all users)."""
+    return LiveKnowledgeBase(KNOWLEDGE_BASE_PATH).start()
 
 # Page Configuration
 st.set_page_config(
@@ -39,7 +58,7 @@ st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 # Initialize Session State
 if "last_synced_time" not in st.session_state:
-    st.session_state.last_synced_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    st.session_state.last_synced_time = _scrape_label()
 
 if "is_processing" not in st.session_state:
     st.session_state.is_processing = False
@@ -52,7 +71,7 @@ INITIAL_WELCOME_MESSAGE = {
     "content": (
         "**Welcome to the DarGlobal & Wasalt Real Estate Advisory Platform.**\n\n"
         "I am your dedicated Applied AI advisor, powered by **NVIDIA Nemotron 3.5 Super VL**. "
-        "I synthesize verified real-time intelligence across **DarGlobal's** international branded portfolio "
+        "I answer from data scraped directly from darglobal.co.uk and wasalt.sa, covering **DarGlobal's** international branded portfolio "
         "(*Pagani, Lamborghini, Aston Martin, Missoni, Trump, Elie Saab*) and **Wasalt's** premier Saudi Arabian "
         "property marketplace across Riyadh, Jeddah, and Al Khobar.\n\n"
         "How may I assist your real estate acquisition or investment research today?"
@@ -61,16 +80,20 @@ INITIAL_WELCOME_MESSAGE = {
     "timestamp": datetime.now().strftime("%d %b %Y, %I:%M %p")
 }
 
-if "rag_engine" not in st.session_state:
-    try:
-        st.session_state.rag_engine = RAGEngine(KNOWLEDGE_BASE_PATH)
-    except Exception as e:
-        try:
-            new_kb = run_pipeline()
-            st.session_state.rag_engine = RAGEngine(new_kb)
-        except Exception as ex:
-            st.error(f"Failed to initialize Knowledge Base: {ex}")
-            st.stop()
+try:
+    live_kb = get_live_kb()
+    # Fetched on every interaction: if the background refresher published new data,
+    # this question already uses it, with no restart and no interruption to the chat.
+    st.session_state.rag_engine = live_kb.get_engine()
+except Exception as ex:
+    st.error(f"Failed to initialize Knowledge Base: {ex}")
+    st.stop()
+
+if st.session_state.get("data_version") != live_kb.version:
+    if "data_version" in st.session_state:
+        st.toast(f"New market data loaded ({len(st.session_state.rag_engine.documents)} records).", icon=None)
+    st.session_state.data_version = live_kb.version
+    st.session_state.last_synced_time = _scrape_label()
 
 if "messages" not in st.session_state:
     st.session_state.messages = [INITIAL_WELCOME_MESSAGE]
@@ -85,7 +108,9 @@ def render_property_card(card: dict):
     badge_class = "card-badge-darglobal" if is_dg else "card-badge-wasalt"
     badge_label = "DARGLOBAL" if is_dg else "WASALT KSA"
     
-    price_local = card.get("price_local", "Price on Request")
+    price_local = card.get("price_local") or ("Market guide" if card.get("property_type") == "Market guide"
+                                              else "Company page" if card.get("property_type") == "Company information"
+                                              else "Price on request")
     price_usd = card.get("price_usd", "")
     usd_str = f'<span class="card-price-usd">({price_usd})</span>' if price_usd else ""
     
@@ -124,6 +149,9 @@ def render_property_card(card: dict):
         </div>
     </div>
     """
+    # Markdown ends an HTML block at a blank line (e.g. an empty field), which would print
+    # the rest of the card as code, so flatten the card to non-empty, unindented lines.
+    card_html = "\n".join(line.strip() for line in card_html.splitlines() if line.strip())
     st.markdown(card_html, unsafe_allow_html=True)
 
 
@@ -138,25 +166,31 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # Dynamic Data Refresh / Sync Card
-    st.markdown(f"""
-    <div class="sync-card">
-        <div class="sync-status-header">
-            <span class="pulse-circle"></span>
-            <span>Market Feed: Connected</span>
+    # Live data status card: re-renders itself every 30 s, without interrupting the chat.
+    @st.fragment(run_every="30s")
+    def data_status_card():
+        live_kb.get_engine()  # reload now if the background refresher published new data
+        s = live_kb.status
+        st.markdown(f"""
+        <div class="sync-card">
+            <div class="sync-status-header">
+                <span class="pulse-circle"></span>
+                <span>Market Feed: {"Refreshing in background…" if s["running"] else "Live"}</span>
+            </div>
+            <div class="sync-time-label">Data scraped: {_scrape_label()}</div>
+            <div class="sync-time-label">{s.get("records", "?")} records · auto-refresh ({live_kb.mode}) every {int(live_kb.interval // 60)} min · next {s.get("next_run") or "-"}</div>
+            <div class="sync-time-label">Last refresh: {s.get("last_result")}</div>
         </div>
-        <div class="sync-time-label">Last Synced: {st.session_state.last_synced_time}</div>
-    </div>
-    """, unsafe_allow_html=True)
+        """, unsafe_allow_html=True)
 
-    # Dynamic Sync Trigger Button (Disabled if busy)
-    if st.button("Sync Latest Market Data", use_container_width=True, disabled=is_busy):
-        with st.spinner("Refreshing DarGlobal and Wasalt listings..."):
-            new_kb = run_pipeline()
-            st.session_state.rag_engine = RAGEngine(new_kb)
-            st.session_state.last_synced_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            st.toast("Portfolio synchronized with latest data.", icon=None)
-            st.rerun()
+    data_status_card()
+
+    # Starts a refresh in the background thread; the chat keeps working meanwhile.
+    if st.button("Sync Latest Market Data", use_container_width=True,
+                 disabled=is_busy or live_kb.status["running"] or live_kb.mode == "off"):
+        live_kb.trigger_now()
+        st.toast("Refresh started in the background. Keep chatting; new data is used as soon as it lands.",
+                 icon=None)
 
     st.markdown("---")
     st.markdown("### Filters")
@@ -201,8 +235,8 @@ with st.sidebar:
             <div class="stat-desc">Total Assets</div>
         </div>
         <div class="stat-item">
-            <div class="stat-num">100%</div>
-            <div class="stat-desc">REGA Certified</div>
+            <div class="stat-num">{len({d.get("city") for d in docs if d.get("city")})}</div>
+            <div class="stat-desc">Cities</div>
         </div>
     </div>
     """, unsafe_allow_html=True)
@@ -210,11 +244,11 @@ with st.sidebar:
     st.markdown("### Inquiries")
     sample_queries = [
         ("Pagani & Lamborghini Branded Residences", "Show me residences designed by Pagani and Lamborghini."),
-        ("Luxury Family Villas in Riyadh (< SAR 8M)", "What are the best luxury standalone villas in North Riyadh under SAR 8M?"),
+        ("Villas for Sale in Riyadh on Wasalt", "What villas are listed for sale in Riyadh on Wasalt, and at what prices?"),
         ("Trump Developments in Riyadh & Jeddah", "Tell me about Trump developments in Riyadh and Jeddah."),
-        ("Compare W Residences vs DG1 Living", "Compare W Residences Downtown Dubai and DG1 Living."),
+        ("Compare W Residences vs DG1", "Compare W Residences and DG1 in Dubai: status, unit types and sizes."),
         ("Coastal Developments in Oman & Qatar", "What beachfront projects are in Oman and Qatar?"),
-        ("Wasalt Electronic Auctions & REGA Compliance", "Explain Wasalt electronic auctions and REGA compliance.")
+        ("Apartments for Rent in Jeddah", "What does Wasalt show for apartments for rent in Jeddah?")
     ]
 
     # Render Sample Queries (Completely disabled when another query is in progress)
@@ -340,7 +374,7 @@ with tab_chat:
                     rag = st.session_state.rag_engine
                     retrieved_results = rag.search(
                         query=current_inquiry,
-                        top_k=3,
+                        top_k=4,
                         source_filter=source_filter,
                         city_filter=city_filter
                     )
@@ -441,10 +475,14 @@ with tab_portfolio:
             or q in d.get("country", "").lower()
         ]
 
-    st.markdown(f"**Showing {len(filtered_docs)} verified developments (Live synced: {st.session_state.last_synced_time}):**")
-    
+    # Projects and listings first; company pages and market guides aren't property cards.
+    filtered_docs = [d for d in filtered_docs if d.get("property_type") not in ("Company information", "Market guide")]
+    shown = filtered_docs[:60]
+    st.markdown(f"**{len(filtered_docs)} scraped records match (showing {len(shown)}; scraped: {st.session_state.last_synced_time}). "
+                f"Use the filters to narrow down.**")
+
     col_a, col_b, col_c = st.columns(3)
-    for idx, doc in enumerate(filtered_docs):
+    for idx, doc in enumerate(shown):
         target_col = [col_a, col_b, col_c][idx % 3]
         with target_col:
             render_property_card(doc)

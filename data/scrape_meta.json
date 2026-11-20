@@ -1,0 +1,16 @@
+{
+  "built_at": "2026-11-20T08:46:39Z",
+  "darglobal": {
+    "status": "snapshot",
+    "records": 48,
+    "scraped_at": "2026-11-20T08:45:10Z",
+    "note": "live scrape not requested"
+  },
+  "wasalt": {
+    "status": "snapshot",
+    "records": 486,
+    "scraped_at": "2026-11-20T08:26:00Z",
+    "note": "live scrape not requested"
+  },
+  "total_records": 534
+}

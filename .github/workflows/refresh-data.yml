@@ -1,0 +1,53 @@
+# Scrapes darglobal.co.uk and wasalt.sa on a schedule and commits the merged data.
+# The deployed chatbot checks GitHub for newer data every 30 minutes and hot-swaps it,
+# so new listings reach users without a redeploy (render.yaml ignores data/ changes).
+name: Refresh scraped data
+
+on:
+  schedule:
+    - cron: "17 */6 * * *"   # every 6 hours
+  workflow_dispatch: {}       # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install scraper
+        run: |
+          pip install -r requirements.txt -r requirements-scraper.txt
+          python -m playwright install --with-deps chromium
+
+      # A virtual display lets Chromium run as a normal (non-headless) browser.
+      # If a site shows an interactive bot check, that site keeps its last snapshot.
+      - name: Scrape and merge
+        run: xvfb-run -a python -m scraper.run_scrapers
+
+      - name: Show result
+        run: cat data/scrape_meta.json
+
+      - name: Commit new data
+        run: |
+          git config user.name "data-refresh-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "No changes in scraped data."
+          else
+            git commit -m "Refresh scraped DarGlobal and Wasalt data"
+            git push
+          fi
