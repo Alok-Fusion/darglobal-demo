@@ -1,20 +1,18 @@
 {
-  "built_at": "2026-11-22T06:54:15Z",
+  "built_at": "2026-11-22T19:44:40Z",
   "darglobal": {
     "status": "live",
     "records": 48,
     "added": 0,
     "updated": 48,
     "kept_from_earlier": 0,
-    "scraped_at": "2026-11-22T06:54:15Z"
+    "scraped_at": "2026-11-22T19:44:40Z"
   },
   "wasalt": {
-    "status": "live",
+    "status": "snapshot",
     "records": 765,
-    "added": 279,
-    "updated": 383,
-    "kept_from_earlier": 103,
-    "scraped_at": "2026-11-22T06:55:20Z"
+    "scraped_at": "2026-11-22T06:55:20Z",
+    "note": "ScrapeBlocked: https://wasalt.sa/en/: site check did not clear ('Just a moment...')"
   },
   "total_records": 813
 }
