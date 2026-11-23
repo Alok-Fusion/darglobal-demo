@@ -1,12 +1,12 @@
 {
-  "built_at": "2026-11-22T19:44:40Z",
+  "built_at": "2026-11-23T07:44:03Z",
   "darglobal": {
     "status": "live",
     "records": 48,
     "added": 0,
     "updated": 48,
     "kept_from_earlier": 0,
-    "scraped_at": "2026-11-22T19:44:40Z"
+    "scraped_at": "2026-11-23T07:44:03Z"
   },
   "wasalt": {
     "status": "snapshot",
